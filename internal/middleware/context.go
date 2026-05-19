@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/auth"
 )
 
 type contextKey string
@@ -16,17 +18,17 @@ const (
 	RequestIDKey   contextKey = "request_id"
 )
 
-type Roles string
+// type Roles string
 
-const (
-	RolesAdmin Roles = "admin"
-	RolesUser  Roles = "user"
-)
+// const (
+// 	RolesAdmin Roles = "admin"
+// 	RolesUser  Roles = "user"
+// )
 
 type UserContext struct {
-	ID    int64  `json:"id"`
-	Email string `json:"email"`
-	Role  Roles  `json:"role"`
+	ID    int64      `json:"id"`
+	Email string     `json:"email"`
+	Role  auth.Roles `json:"role"`
 }
 
 type ErrorList struct {

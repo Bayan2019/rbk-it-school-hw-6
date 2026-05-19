@@ -41,6 +41,10 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+////// methods
+////// methods
+////// methods
+
 func (m *JWTManager) Generate(userID int64, email string, role Roles) (string, error) {
 	claims := Claims{
 		UserID: userID,
