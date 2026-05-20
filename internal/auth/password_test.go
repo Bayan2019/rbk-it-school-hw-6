@@ -17,45 +17,45 @@ func TestCheckPassword(t *testing.T) {
 		name     string
 		password string
 		hash     string
-		wantErr  bool
+		wantRes  bool
 	}{
 		{
 			name:     "Correct password",
 			password: password1,
 			hash:     hash1,
-			wantErr:  false,
+			wantRes:  true,
 		},
 		{
 			name:     "Incorrect password",
 			password: "wrongPassword",
 			hash:     hash1,
-			wantErr:  true,
+			wantRes:  false,
 		},
 		{
 			name:     "Password doesn't match different hash",
 			password: password1,
 			hash:     hash2,
-			wantErr:  true,
+			wantRes:  false,
 		},
 		{
 			name:     "Empty password",
 			password: "",
 			hash:     hash1,
-			wantErr:  true,
+			wantRes:  false,
 		},
 		{
 			name:     "Invalid hash",
 			password: password1,
 			hash:     "invalidhash",
-			wantErr:  true,
+			wantRes:  false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ok := auth.CheckPassword(tt.password, tt.hash)
-			if !ok {
-				t.Errorf("CheckPasswordHash() wantErr")
+			if ok != tt.wantRes {
+				t.Errorf("CheckPasswordHash() wantRes: %t get %t", ok, tt.wantRes)
 			}
 		})
 	}

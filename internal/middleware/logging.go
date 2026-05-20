@@ -39,8 +39,10 @@ func RequestLogger(logger *zap.Logger) func(http.Handler) http.Handler {
 				zap.String("request_id", requestID),
 			}
 
-			if len(GetErrors(r).Errors) > 0 {
-				fields = append(fields, zap.String("gin_errors", GetErrors(r).String()))
+			if GetErrors(r) != nil {
+				if len(GetErrors(r).Errors) > 0 {
+					fields = append(fields, zap.String("gin_errors", GetErrors(r).String()))
+				}
 			}
 
 			if statusCode >= 500 {

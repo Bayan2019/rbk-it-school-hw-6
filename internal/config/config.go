@@ -6,15 +6,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/time/rate"
 )
 
 var Cfg Config
 
 type Config struct {
-	App      AppConfig
-	Database DatabaseConfig
-	Api      ApiConfig
+	App          AppConfig
+	Database     DatabaseConfig
+	DatabaseTest DatabaseConfig
+	Api          ApiConfig
 }
 
 type AppConfig struct {
@@ -39,7 +41,14 @@ type ApiConfig struct {
 	UserAgent string
 }
 
-func MustLoad() {
+func MustLoad(path string) error {
+	if path == "" {
+		path = ".env"
+	}
+	err := godotenv.Load(path)
+	if err != nil {
+		return err
+	}
 	Cfg = Config{
 		App: AppConfig{
 			Port: getEnv("APP_PORT", ":8080"),
@@ -58,11 +67,20 @@ func MustLoad() {
 			Password: getEnv("DB_PASSWORD", "postgres"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
+		DatabaseTest: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnv("DB_PORT", "5432"),
+			Name:     getEnv("DB_NAME_TEST", "users_db_test"),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASSWORD", "postgres"),
+			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		},
 		Api: ApiConfig{
 			Limiter:   rate.NewLimiter(rate.Every(time.Second), 5),
 			UserAgent: getEnv("USER_AGENT", "weather-api/1.0 (example@gmail.com)"),
 		},
 	}
+	return nil
 }
 
 func (c DatabaseConfig) DSN() string {
