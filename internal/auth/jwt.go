@@ -15,6 +15,7 @@ var (
 	ErrTokenNotFound = errors.New("token not found")
 	ErrInvalidToken  = errors.New("invalid token")
 	ErrInvalidClaims = errors.New("invalid claims")
+	ErrInvalidSecret = errors.New("invalid secret")
 )
 
 type JWTManager struct {
@@ -74,9 +75,8 @@ func (m *JWTManager) Validate(tokenString string) (*Claims, error) {
 
 		return m.secret, nil
 	})
-
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidToken
 	}
 
 	if !token.Valid {
@@ -85,7 +85,11 @@ func (m *JWTManager) Validate(tokenString string) (*Claims, error) {
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		return claims, ErrInvalidClaims
+		return claims, ErrInvalidToken
+	}
+
+	if claims == nil {
+		return nil, ErrInvalidToken
 	}
 
 	// 6. Безопасность
