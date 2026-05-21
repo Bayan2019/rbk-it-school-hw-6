@@ -78,7 +78,7 @@ func (r *UserRepository) List(
 	}
 
 	if !filter.IncludeDeleted {
-		fmt.Println("IncludeDeleted")
+		// fmt.Println("IncludeDeleted")
 		builder.WriteString(" AND deleted_at IS NULL")
 	}
 

@@ -86,9 +86,9 @@ func MigrateDown(db *sqlx.DB) error {
 	queries := []string{
 		"DROP TABLE IF EXISTS weather_history;",
 		"DROP TABLE IF EXISTS users_cities;",
+		"DELETE FROM cities WHERE city IN ('Paris', 'Berlin');",
 		"DROP TABLE IF EXISTS cities;",
 		"DELETE FROM users WHERE email IN ('admin@example.com', 'user@example.com');",
-		"DELETE FROM cities WHERE email IN ('Paris', 'Berlin');",
 		"DROP TABLE IF EXISTS users;",
 		"DROP TYPE IF EXISTS roles;",
 	}
