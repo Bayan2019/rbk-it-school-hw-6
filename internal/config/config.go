@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -20,7 +21,7 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Port         string
+	Port         int
 	JwtSecret    string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
@@ -49,9 +50,15 @@ func MustLoad(path string) error {
 	if err != nil {
 		return err
 	}
+	portStr := getEnv("APP_PORT", "8080")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return err
+	}
+
 	Cfg = Config{
 		App: AppConfig{
-			Port: getEnv("APP_PORT", ":8080"),
+			Port: port,
 			// 6. Безопасность
 			// - JWT secret хранить в env
 			JwtSecret:    getEnv("JWT_SECRET", "dev-secret-change-me"),
