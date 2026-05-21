@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/app"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/config"
-	"github.com/Bayan2019/rbk-it-school-hw-6/internal/server"
 	"github.com/Bayan2019/rbk-it-school-hw-6/pkg/logger"
 )
 
@@ -61,7 +61,7 @@ func run(
 
 	// Ch 2. Logging Lv 4. Global Logger vs. Dependency Injection
 	// Use the access logger for server/request logs
-	s := server.NewServer(httpPort, cancel, logger)
+	s := app.NewServer(httpPort, cancel, logger)
 	var serverErr error
 	go func() {
 		serverErr = s.Start()
