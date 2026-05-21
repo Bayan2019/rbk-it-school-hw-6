@@ -1,11 +1,20 @@
 package app
 
-import "github.com/jmoiron/sqlx"
+import (
+	"github.com/jmoiron/sqlx"
+)
 
 func MigrateUp(db *sqlx.DB) error {
 
 	queries := []string{
-		"CREATE TYPE IF NOT EXISTS roles AS ENUM ('admin', 'user');",
+		`
+		DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'roles') THEN
+        CREATE TYPE roles AS ENUM ('admin', 'user');
+    END IF;
+END$$;
+		`,
 		`
 	CREATE TABLE IF NOT EXISTS users (
 		id              BIGSERIAL PRIMARY KEY,
@@ -28,7 +37,7 @@ func MigrateUp(db *sqlx.DB) error {
         'User', 'Role', TRUE, 'user')
 	ON CONFLICT DO NOTHING;`,
 		`
-	CREATE TABLE cities(
+	CREATE TABLE IF NOT EXISTS cities(
 		city_id BIGSERIAL PRIMARY KEY,
 		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -60,6 +69,7 @@ func MigrateUp(db *sqlx.DB) error {
 	for _, query := range queries {
 		_, err := db.Exec(query)
 		if err != nil {
+			// log.Println(query)
 			return err
 		}
 	}

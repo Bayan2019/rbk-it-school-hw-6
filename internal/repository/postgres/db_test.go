@@ -12,7 +12,7 @@ import (
 func setupTestDB(t *testing.T) *sqlx.DB {
 	t.Helper()
 	// err := godotenv.Load(".env")
-	err := config.MustLoad("../../.env")
+	err := config.MustLoad("../../../.env")
 	require.NoError(t, err)
 
 	db, err := sqlx.Open("pgx", config.Cfg.DatabaseTest.DSN())
