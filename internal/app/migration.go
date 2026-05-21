@@ -47,6 +47,12 @@ END$$;
 		UNIQUE(lat, lon)
 	);`,
 		`
+	INSERT INTO cities (city, lat, lon)
+	VALUES
+	('Paris', 48.8534951, 2.3483915),
+	('Berlin', 52.5173885, 13.3951309)
+	ON CONFLICT DO NOTHING;`,
+		`
 	CREATE TABLE IF NOT EXISTS users_cities(
 		user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 		city_id BIGINT NOT NULL REFERENCES cities(city_id) ON DELETE CASCADE,
@@ -82,6 +88,7 @@ func MigrateDown(db *sqlx.DB) error {
 		"DROP TABLE IF EXISTS users_cities;",
 		"DROP TABLE IF EXISTS cities;",
 		"DELETE FROM users WHERE email IN ('admin@example.com', 'user@example.com');",
+		"DELETE FROM cities WHERE email IN ('Paris', 'Berlin');",
 		"DROP TABLE IF EXISTS users;",
 		"DROP TYPE IF EXISTS roles;",
 	}
