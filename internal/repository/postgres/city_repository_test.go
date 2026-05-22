@@ -11,6 +11,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCityRepository_Create_AlreadyExist(t *testing.T) {
+	db := setupTestDB(t)
+	repo := postgres.NewCityRepository(db)
+
+	err := repo.Create(context.Background(), dto.CreateCityInput{
+		City: "Paris",
+		Lat:  48.8534951,
+		Lon:  2.3483915,
+	})
+
+	assert.Equal(t, model.ErrCityNameAlreadyTaken, err)
+}
+
 func TestCityRepository_CreateAndGetByName(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewCityRepository(db)
@@ -53,6 +66,27 @@ func TestCityRepository_Add2UserAndListCitiesOfUser(t *testing.T) {
 	require.NoError(t, err)
 	city := cities[0]
 	assert.Equal(t, "Paris", city.City)
+}
+
+func TestCityRepository_Add2User_AlreadyAdded(t *testing.T) {
+	db := setupTestDB(t)
+	repo := postgres.NewCityRepository(db)
+
+	err := repo.Add2User(context.Background(), 2, dto.AddCityInput{
+		City: "Paris",
+	})
+
+	require.NoError(t, err)
+
+	err = repo.Add2User(
+		context.Background(),
+		2,
+		dto.AddCityInput{
+			City: "Paris",
+		},
+	)
+
+	assert.Equal(t, model.ErrCityAlreadyAdded2User, err)
 }
 
 func TestCityRepository_GetByName(t *testing.T) {
