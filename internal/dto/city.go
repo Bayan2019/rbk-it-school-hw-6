@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type CityItem struct {
@@ -48,7 +50,7 @@ type CityResponse struct {
 ////// accommodating functions
 
 func (in *CreateCityInput) NormalizeAndValidate() error {
-	in.City = strings.TrimSpace(in.City)
+	in.City = strings.TrimSpace(cases.Title(language.Und).String(in.City))
 
 	if in.City == "" {
 		return model.ErrInvalidCityInput
@@ -58,7 +60,7 @@ func (in *CreateCityInput) NormalizeAndValidate() error {
 }
 
 func (in *AddCityInput) NormalizeAndValidate() error {
-	in.City = strings.TrimSpace(strings.ToTitle(in.City))
+	in.City = strings.TrimSpace(cases.Title(language.Und).String(in.City))
 
 	if in.City == "" {
 		return model.ErrInvalidCityInput

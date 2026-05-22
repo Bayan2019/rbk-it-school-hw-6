@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type CityWeatherInput struct {
@@ -35,7 +37,7 @@ type WeatherHistoryResponse struct {
 ////// accommodating functions
 
 func (in *CityWeatherInput) NormalizeAndValidate() error {
-	in.City = strings.TrimSpace(strings.ToLower(in.City))
+	strings.TrimSpace(cases.Title(language.Und).String(in.City))
 
 	if in.City == "" {
 		return model.ErrInvalidCityInput
@@ -52,5 +54,6 @@ func (f *WeatherHistoryFilter) Normalize() {
 		f.Offset = 0
 	}
 	f.City = strings.TrimSpace(
-		strings.ToLower(f.City))
+		cases.Title(language.Und).String(f.City),
+	)
 }

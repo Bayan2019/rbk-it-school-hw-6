@@ -124,3 +124,49 @@ func TestCityService_Create_InvalidInput(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestCityService_Add2User_Success(t *testing.T) {
+	err := config.MustLoad("../../.env")
+	require.NoError(t, err)
+
+	client := client.NewOsmClient(config.Cfg.Api)
+
+	repo := new(MockCityRepository)
+	cityService := service.NewCityService(repo, client)
+
+	req := dto.AddCityInput{
+		City: "Paris",
+	}
+
+	repo.On("Add2User", mock.Anything, int64(2), mock.MatchedBy(func(city dto.AddCityInput) bool {
+		return city.City == "Paris"
+	})).
+		Return(nil).
+		Once()
+
+	err = cityService.Add2User(context.Background(), 2, req)
+
+	require.NoError(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestCityService_Add2User_InvalidInput(t *testing.T) {
+	err := config.MustLoad("../../.env")
+	require.NoError(t, err)
+
+	client := client.NewOsmClient(config.Cfg.Api)
+
+	repo := new(MockCityRepository)
+	cityService := service.NewCityService(repo, client)
+
+	req := dto.AddCityInput{
+		City: "",
+	}
+
+	err = cityService.Add2User(context.Background(), 2, req)
+
+	assert.Equal(t, model.ErrInvalidCityInput, err)
+
+	repo.AssertExpectations(t)
+}
