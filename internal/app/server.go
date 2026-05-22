@@ -16,7 +16,7 @@ import (
 // Ch 2. Logging Lv 4. Global Logger vs. Dependency Injection
 // Add a logger field to the server struct,
 // and update server logging to use that injected logger.
-type server struct {
+type Server struct {
 	httpServer *http.Server
 	cancel     context.CancelFunc
 	logger     *slog.Logger
@@ -27,7 +27,7 @@ func NewServer(
 	port int,
 	cancel context.CancelFunc,
 	accessLogger *slog.Logger,
-) *server {
+) *Server {
 	mux := http.NewServeMux()
 
 	srv := &http.Server{
@@ -35,7 +35,7 @@ func NewServer(
 		Handler: middleware.RequestLogger(accessLogger)(mux),
 	}
 
-	s := &server{
+	s := &Server{
 		httpServer: srv,
 		// store:      store,
 		cancel: cancel,
@@ -66,7 +66,7 @@ func NewServer(
 	return s
 }
 
-func (s *server) Start() error {
+func (s *Server) Start() error {
 	ln, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
 		return err
@@ -88,11 +88,11 @@ func (s *server) Start() error {
 	return nil
 }
 
-func (s *server) Shutdown(ctx context.Context) error {
+func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }
 
-func (s *server) HandlerShutdown(w http.ResponseWriter, r *http.Request) {
+func (s *Server) HandlerShutdown(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("ENV") == "production" {
 		http.NotFound(w, r)
 		return

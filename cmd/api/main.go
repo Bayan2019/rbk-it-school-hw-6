@@ -20,10 +20,6 @@ func main() {
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
-	// httpPort := flag.Int("port", 8899, "port to listen on")
-	// dataDir := flag.String("data", "./data", "directory to store data")
-	// flag.Parse()
-
 	status := run(ctx, cancel, config.Cfg.App.Port)
 	cancel()
 	os.Exit(status)
@@ -37,20 +33,14 @@ func run(
 ) int {
 
 	// Ch 2. Logging Lv 5. Logger Configuration
-	// Assume that in production,
-	// WeatherApp has a LOG_FILE environment variable set.
-	// In local development and staging, it is not set.
-	var initializeLoggerFile = getEnv("LOG_FILE", "")
-
-	// Ch 2. Logging Lv 5. Logger Configuration
 	// Add an initializeLogger helper.
-	logger, close, err := logger.InitializeLogger(initializeLoggerFile)
+	logger, close, err := logger.InitializeLogger(config.Cfg.App.LogFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
 		return 1
 	}
 	// Ch 2. Logging Lv 8. Logger Cleanup
-	// Call the close function before Linko exits.
+	// Call the close function before WeatherApp exits.
 	// defer a wrapper that calls it
 	defer func() {
 		if err := close(); err != nil {

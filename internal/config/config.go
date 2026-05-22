@@ -23,6 +23,7 @@ type Config struct {
 type AppConfig struct {
 	Port         int
 	JwtSecret    string
+	LogFile      string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	IdleTimeout  time.Duration
@@ -61,7 +62,12 @@ func MustLoad(path string) error {
 			Port: port,
 			// 6. Безопасность
 			// - JWT secret хранить в env
-			JwtSecret:    getEnv("JWT_SECRET", "dev-secret-change-me"),
+			JwtSecret: getEnv("JWT_SECRET", "dev-secret-change-me"),
+			// Ch 2. Logging Lv 5. Logger Configuration
+			// Assume that in production,
+			// WeatherApp has a LOG_FILE environment variable set.
+			// In local development and staging, it is not set.
+			LogFile:      getEnv("LOG_FILE", ""),
 			ReadTimeout:  mustDuration("APP_READ_TIMEOUT", "5s"),
 			WriteTimeout: mustDuration("APP_WRITE_TIMEOUT", "10s"),
 			IdleTimeout:  mustDuration("APP_IDLE_TIMEOUT", "60s"),
