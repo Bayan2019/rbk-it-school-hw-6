@@ -219,3 +219,53 @@ func TestUserService_GetByEmail_NotFound(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestUserService_GetUser_Success(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	expectedUser := model.User{
+		ID:        1,
+		FirstName: "Admin",
+		Email:     "admin@example.com",
+	}
+
+	repo.On("GetByID", mock.Anything, int64(1), false).
+		Return(expectedUser, nil).
+		Once()
+
+	actualUser, err := userService.GetByID(context.Background(), 1, false)
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedUser, actualUser)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_GetByID_InvalidID(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	user, err := userService.GetByID(context.Background(), 0, false)
+
+	require.ErrorIs(t, err, model.ErrInvalidUserID)
+	assert.Equal(t, user, model.User{})
+
+	repo.AssertNotCalled(t, "GetByID")
+}
+
+func TestUserService_GetUser_NotFound(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	repo.On("GetByID", mock.Anything, int64(999), false).
+		Return(model.User{}, model.ErrUserNotFound).
+		Once()
+
+	user, err := userService.GetByID(context.Background(), 999, false)
+
+	require.ErrorIs(t, err, model.ErrUserNotFound)
+	assert.Equal(t, user, model.User{})
+
+	repo.AssertExpectations(t)
+}
