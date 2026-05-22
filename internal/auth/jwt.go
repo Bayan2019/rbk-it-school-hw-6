@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,10 +21,14 @@ var (
 
 type JWTManager struct {
 	secret []byte
+	Logger *slog.Logger
 }
 
-func NewJWTManager(secret []byte) *JWTManager {
-	return &JWTManager{secret: secret}
+func NewJWTManager(secret []byte, logger *slog.Logger) *JWTManager {
+	return &JWTManager{
+		secret: secret,
+		Logger: logger,
+	}
 }
 
 type Roles string
@@ -70,31 +75,41 @@ func (m *JWTManager) Validate(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		// Best practice: never trust the algorithm from token blindly.
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+
+			m.Logger.Error("wrong signing method",
+				"alg", token.Header["alg"])
 			return nil, fmt.Errorf("unexpected signing method: %s", token.Header["alg"])
 		}
 
 		return m.secret, nil
 	})
 	if err != nil {
+		m.Logger.Error("error with ParseWithClaims",
+			"error", err)
 		return nil, ErrInvalidToken
 	}
 
 	if !token.Valid {
+		m.Logger.Error("token is not valid")
 		return nil, ErrInvalidToken
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
+		m.Logger.Error("can't take claims",
+			"claims", claims)
 		return claims, ErrInvalidToken
 	}
 
 	if claims == nil {
+		m.Logger.Error("claims is nil")
 		return nil, ErrInvalidToken
 	}
 
 	// 6. Безопасность
 	// - проверка exp
 	if claims.Exp.After(time.Now().Add(30 * time.Minute)) {
+		m.Logger.Error("claims are expired")
 		return claims, ErrTokenExpired
 	}
 

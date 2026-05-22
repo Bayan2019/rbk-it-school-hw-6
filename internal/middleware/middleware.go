@@ -14,12 +14,18 @@ func AuthMiddleware(jwtManager *auth.JWTManager) func(http.Handler) http.Handler
 			// 1. Чтение Authorization header
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
+				jwtManager.Logger.Error(
+					"error -- no authorization header",
+				)
 				WriteError(w, http.StatusUnauthorized, "missing Authorization header", nil)
 				return
 			}
 
 			const prefix = "Bearer "
 			if !strings.HasPrefix(authHeader, prefix) {
+				jwtManager.Logger.Error(
+					"error -- token doesn't have prefix Bearer",
+				)
 				WriteError(w, http.StatusUnauthorized, "invalid Authorization header format", nil)
 				return
 			}
@@ -27,6 +33,9 @@ func AuthMiddleware(jwtManager *auth.JWTManager) func(http.Handler) http.Handler
 			// 2. Проверка токена
 			tokenString := strings.TrimPrefix(authHeader, prefix)
 			if tokenString == "" {
+				jwtManager.Logger.Error(
+					"error -- no token",
+				)
 				WriteError(w, http.StatusUnauthorized, "empty token", nil)
 				return
 			}
@@ -34,6 +43,10 @@ func AuthMiddleware(jwtManager *auth.JWTManager) func(http.Handler) http.Handler
 			// 3. Парсинг claims
 			claims, err := jwtManager.Validate(tokenString)
 			if err != nil {
+				jwtManager.Logger.Error(
+					"error validating token",
+					"error", err,
+				)
 				WriteError(w, http.StatusUnauthorized, "invalid token", err)
 				return
 			}

@@ -62,22 +62,12 @@ func InitializeLogger(logFile string) (*slog.Logger, closeFunc, error) {
 			Level: slog.LevelInfo,
 		}))
 
-		// Ch 3. Structured Logging Lv 1. Slog Package
-		// Update your logger type to *slog.Logger,
-		// using slog.NewTextHandler.
-		// You can use nil handler options for now.
-		// logger := slog.New(slog.NewTextHandler(multiWriter, nil))
-
 	} else {
 		handlers = append(handlers, slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelInfo,
 		}))
 	}
-	// Ch 2. Logging Lv 8. Logger Cleanup
-	// For the STDERR logger, return a no-op close function that returns nil.
-	// close = func() error {
-	// 	return nil
-	// }
+
 	logger := slog.New(slog.NewMultiHandler(
 		handlers...,
 	))
@@ -96,7 +86,7 @@ func InitializeLogger(logFile string) (*slog.Logger, closeFunc, error) {
 	// to configure your STDERR logs
 	// to include DEBUG and above,
 	// and your file logs to include INFO and above.
-	// Use slog.NewMultiHandler to combine both handlers into one logger
+	// Use slog.NewMultiHandler to combine handlers into one logger
 	// used throughout the app.
 	logger = slog.New(slog.NewMultiHandler(
 		handlers...,

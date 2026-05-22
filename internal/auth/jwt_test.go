@@ -1,20 +1,38 @@
 package auth_test
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/auth"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/config"
+	"github.com/Bayan2019/rbk-it-school-hw-6/pkg/logger"
+	"github.com/stretchr/testify/require"
 )
 
 // 6. Authentication / 6. JWTs
 func TestValidate(t *testing.T) {
 	config.MustLoad("../../.env")
-	// userID := uuid.New()
-	// validToken, _ := MakeJWT(userID, "secret", time.Hour)
+
+	// Ch 2. Logging Lv 5. Logger Configuration
+	// Add an initializeLogger helper.
+	logger, close, err := logger.InitializeLogger(config.Cfg.App.LogFile)
+	require.NoError(t, err)
+	// Ch 2. Logging Lv 8. Logger Cleanup
+	// Call the close function before WeatherApp exits.
+	// defer a wrapper that calls it
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+
+	jwtManager := auth.NewJWTManager([]byte(config.Cfg.App.JwtSecret), logger)
+
 	userID := int64(2)
 	email := "some@example.com"
-	jwtManager := auth.NewJWTManager([]byte(config.Cfg.App.JwtSecret))
 	validToken, err := jwtManager.Generate(userID, email, auth.RolesUser)
 	if err != nil {
 		t.Errorf("jwtManager.Generate error = %v", err)
