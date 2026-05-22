@@ -216,3 +216,69 @@ func TestUserService_GetByName_NotFound(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestCityService_DeleteFromUser_Success(t *testing.T) {
+	err := config.MustLoad("../../.env")
+	require.NoError(t, err)
+
+	client := client.NewOsmClient(config.Cfg.Api)
+
+	repo := new(MockCityRepository)
+	cityService := service.NewCityService(repo, client)
+
+	repo.On("DeleteFromUser", mock.Anything, int64(2), int64(1)).
+		Return(nil).
+		Once()
+
+	err = cityService.DeleteFromUser(context.Background(), 2, 1)
+
+	require.NoError(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestCityService_DeleteFromUser_InvalidInput(t *testing.T) {
+	err := config.MustLoad("../../.env")
+	require.NoError(t, err)
+
+	client := client.NewOsmClient(config.Cfg.Api)
+
+	repo := new(MockCityRepository)
+	cityService := service.NewCityService(repo, client)
+
+	tests := []struct {
+		name    string
+		userID  int64
+		cityID  int64
+		wantErr error
+	}{
+		{
+			name:    "Invalid user_id",
+			userID:  -2,
+			cityID:  1,
+			wantErr: model.ErrInvalidUserID,
+		},
+		{
+			name:    "Invalid city_id",
+			userID:  2,
+			cityID:  -1,
+			wantErr: model.ErrInvalidCityID,
+		},
+		{
+			name:    "Invalid user_id and city_id",
+			userID:  -2,
+			cityID:  -1,
+			wantErr: model.ErrInvalidUserID,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err = cityService.DeleteFromUser(
+				context.Background(), tt.userID, tt.cityID)
+			require.ErrorIs(t, err, tt.wantErr)
+		})
+	}
+
+	// repo.AssertExpectations(t)
+}
