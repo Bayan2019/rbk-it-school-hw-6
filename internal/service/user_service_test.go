@@ -347,3 +347,50 @@ func TestUserService_Update_NotFound(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestUserService_Delete_Success(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	// input, err := dto.UpdateUserRequest2UpdateUserInput(req)
+
+	repo.On("Delete", mock.Anything, int64(2)).
+		Return(nil).
+		Once()
+
+	err := userService.Delete(context.Background(), 2)
+
+	require.NoError(t, err)
+	// assert.Equal(t, createdUser.ID, user.ID)
+	// assert.Equal(t, createdUser.Email, user.Email)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_Delete_InvalidID(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	err := userService.Delete(context.Background(), -2)
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrInvalidUserID, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_Delete_NotFound(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	repo.On("Delete", mock.Anything, int64(999)).
+		Return(model.ErrUserNotFound).
+		Once()
+
+	err := userService.Delete(context.Background(), 999)
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrUserNotFound, err)
+
+	repo.AssertExpectations(t)
+}
