@@ -180,3 +180,42 @@ func TestUserService_GetUsers_Success(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestUserService_GetByEmail_Success(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	expectedUser := model.User{
+		ID:        1,
+		FirstName: "Admin",
+		Email:     "admin@example.com",
+		IsActive:  true,
+	}
+
+	repo.On("GetByEmail", mock.Anything, "admin@example.com", false).
+		Return(expectedUser, nil).
+		Once()
+
+	actualUser, err := userService.GetByEmail(context.Background(), expectedUser.Email, false)
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedUser, actualUser)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_GetByEmail_NotFound(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	repo.On("GetByEmail", mock.Anything, "some@example.com", false).
+		Return(nil, model.ErrUserNotFound).
+		Once()
+
+	user, err := userService.GetByEmail(context.Background(), "some@example.com", false)
+
+	require.ErrorIs(t, err, model.ErrUserNotFound)
+	assert.Equal(t, user, model.User{})
+
+	repo.AssertExpectations(t)
+}
