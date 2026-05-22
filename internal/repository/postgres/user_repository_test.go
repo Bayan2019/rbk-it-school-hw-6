@@ -12,6 +12,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUserRepository_Create_AlreadyExist(t *testing.T) {
+	db := setupTestDB(t)
+	repo := postgres.NewUserRepository(db)
+
+	trueV := true
+	_, err := repo.Create(context.Background(), dto.CreateUserInput{
+		FirstName: "Alex",
+		LastName:  "Some",
+		Email:     "user@example.com",
+		IsActive:  &trueV,
+	})
+
+	assert.Equal(t, model.ErrEmailAlreadyTaken, err)
+}
+
 func TestUserRepository_CreateAndGetByEmail(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewUserRepository(db)
