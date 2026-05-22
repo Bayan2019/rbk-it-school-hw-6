@@ -269,3 +269,81 @@ func TestUserService_GetUser_NotFound(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestUserService_Update_Success(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	trueV := true
+	req := dto.UpdateUserRequest{
+		FirstName: "Alex",
+		LastName:  "Some",
+		Email:     "admin@example.com",
+		IsActive:  &trueV,
+		Password:  "admin123",
+	}
+
+	// input, err := dto.UpdateUserRequest2UpdateUserInput(req)
+
+	repo.On("Update", mock.Anything, int64(1), mock.MatchedBy(func(user dto.UpdateUserInput) bool {
+		return user.FirstName == "Alex" && user.Email == "admin@example.com"
+	})).
+		Return(nil).
+		Once()
+
+	err := userService.Update(context.Background(), 1, req)
+
+	require.NoError(t, err)
+	// assert.Equal(t, createdUser.ID, user.ID)
+	// assert.Equal(t, createdUser.Email, user.Email)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_Update_InvalidInput(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	trueV := true
+	req := dto.UpdateUserRequest{
+		FirstName: "Admin",
+		LastName:  "Some",
+		Email:     "alexexample.com",
+		IsActive:  &trueV,
+		Password:  "alex123",
+	}
+
+	err := userService.Update(context.Background(), 1, req)
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrInvalidUserInput, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_Update_NotFound(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	trueV := true
+	req := dto.UpdateUserRequest{
+		FirstName: "Admin",
+		LastName:  "Some",
+		Email:     "admin@example.com",
+		IsActive:  &trueV,
+		Password:  "alex123",
+	}
+
+	repo.On("Update", mock.Anything, int64(999), mock.MatchedBy(func(user dto.UpdateUserInput) bool {
+		return user.FirstName == "Admin" && user.Email == "admin@example.com"
+	})).
+		Return(model.ErrUserNotFound).
+		Once()
+
+	err := userService.Update(context.Background(), 999, req)
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrUserNotFound, err)
+
+	repo.AssertExpectations(t)
+}

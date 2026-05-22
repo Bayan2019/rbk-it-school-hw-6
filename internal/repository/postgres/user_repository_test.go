@@ -229,6 +229,22 @@ func TestUserRepository_UpdateAndGetByID(t *testing.T) {
 	assert.Equal(t, "alex@example.com", foundUser.Email)
 }
 
+func TestUserRepository_Update_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	repo := postgres.NewUserRepository(db)
+
+	trueV := true
+	err := repo.Update(context.Background(), 999, dto.UpdateUserInput{
+		FirstName: "Alex",
+		LastName:  "Some",
+		Email:     "alex@example.com",
+		IsActive:  &trueV,
+	})
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrUserNotFound, err)
+}
+
 func TestUserRepository_DeleteAndGetByID(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewUserRepository(db)

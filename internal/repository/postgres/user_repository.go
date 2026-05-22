@@ -190,7 +190,7 @@ func (r *UserRepository) Update(
 		return fmt.Errorf("result.RowsAffected(): %v", err)
 	}
 	if rowsAffected == 0 {
-		return errors.New("user is not updated")
+		return model.ErrUserNotFound
 	}
 
 	return nil

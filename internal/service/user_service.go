@@ -97,15 +97,19 @@ func (s *UserService) GetByID(
 func (s *UserService) Update(
 	ctx context.Context,
 	id int64,
-	input dto.UpdateUserInput,
+	input dto.UpdateUserRequest,
 ) error {
 	if id <= 0 {
 		return model.ErrInvalidUserID
 	}
-	if err := input.NormalizeAndValidate(); err != nil {
+	update, err := dto.UpdateUserRequest2UpdateUserInput(input)
+	if err != nil {
 		return err
 	}
-	return s.repo.Update(ctx, id, input)
+	if err := update.NormalizeAndValidate(); err != nil {
+		return err
+	}
+	return s.repo.Update(ctx, id, update)
 }
 
 func (s *UserService) Delete(
