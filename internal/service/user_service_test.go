@@ -124,3 +124,24 @@ func TestUserService_CreateUser_Success(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestUserService_CreateUser_InvalidInput(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	trueV := true
+	req := dto.RegisterUserInput{
+		FirstName: "Alex",
+		LastName:  "Some",
+		Email:     "alexexample.com",
+		IsActive:  &trueV,
+		Password:  "alex123",
+	}
+
+	_, err := userService.Create(context.Background(), req)
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrInvalidUserInput, err)
+
+	repo.AssertExpectations(t)
+}
