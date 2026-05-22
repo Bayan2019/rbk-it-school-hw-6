@@ -14,11 +14,28 @@ type osmProvider interface {
 }
 
 type cityRepository interface {
-	Create(ctx context.Context, input dto.CreateCityInput) error
-	Add2User(ctx context.Context, userID int64, input dto.AddCityInput) error
-	ListCitiesOfUser(ctx context.Context, userID int64, filter dto.ListCitiesFilter) ([]model.City, error)
-	GetByName(ctx context.Context, name string) (model.City, error)
-	DeleteFromUser(ctx context.Context, userID, cityID int64) error
+	Create(
+		ctx context.Context,
+		input dto.CreateCityInput,
+	) error
+	Add2User(
+		ctx context.Context,
+		userID int64,
+		input dto.AddCityInput,
+	) error
+	ListCitiesOfUser(
+		ctx context.Context,
+		userID int64,
+		filter dto.ListCitiesFilter,
+	) ([]model.City, error)
+	GetByName(
+		ctx context.Context,
+		name string,
+	) (model.City, error)
+	DeleteFromUser(
+		ctx context.Context,
+		userID, cityID int64,
+	) error
 }
 
 type CityService struct {
@@ -26,7 +43,10 @@ type CityService struct {
 	provider osmProvider
 }
 
-func NewCityService(repo cityRepository, provider osmProvider) *CityService {
+func NewCityService(
+	repo cityRepository,
+	provider osmProvider,
+) *CityService {
 	return &CityService{
 		repo:     repo,
 		provider: provider,
@@ -91,10 +111,7 @@ func (s *CityService) GetByName(
 	ctx context.Context,
 	name string,
 ) (model.City, error) {
-	// if err := input.NormalizeAndValidate(); err != nil {
-	// 	return domain.City{}, err
-	// }
-	return s.repo.GetByName(ctx, strings.TrimSpace(strings.ToLower(name)))
+	return s.repo.GetByName(ctx, strings.TrimSpace(strings.ToTitle(name)))
 }
 
 func (s *CityService) DeleteFromUser(

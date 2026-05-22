@@ -48,7 +48,7 @@ type CityResponse struct {
 ////// accommodating functions
 
 func (in *CreateCityInput) NormalizeAndValidate() error {
-	in.City = strings.TrimSpace(strings.ToLower(in.City))
+	in.City = strings.TrimSpace(in.City)
 
 	if in.City == "" {
 		return model.ErrInvalidCityInput
@@ -58,7 +58,7 @@ func (in *CreateCityInput) NormalizeAndValidate() error {
 }
 
 func (in *AddCityInput) NormalizeAndValidate() error {
-	in.City = strings.TrimSpace(strings.ToLower(in.City))
+	in.City = strings.TrimSpace(strings.ToTitle(in.City))
 
 	if in.City == "" {
 		return model.ErrInvalidCityInput
