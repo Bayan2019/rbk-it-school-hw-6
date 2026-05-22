@@ -300,6 +300,27 @@ func TestUserService_Update_Success(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestUserService_Update_InvalidID(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	trueV := true
+	req := dto.UpdateUserRequest{
+		FirstName: "Admin",
+		LastName:  "Some",
+		Email:     "alex@example.com",
+		IsActive:  &trueV,
+		Password:  "alex123",
+	}
+
+	err := userService.Update(context.Background(), -2, req)
+
+	// require.NoError(t, err)
+	assert.Equal(t, model.ErrInvalidUserID, err)
+
+	repo.AssertExpectations(t)
+}
+
 func TestUserService_Update_InvalidInput(t *testing.T) {
 	repo := new(MockUserRepository)
 	userService := service.NewUserService(repo)
