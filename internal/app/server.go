@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -31,11 +32,7 @@ func NewServer(
 	mux := http.NewServeMux()
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%d", port),
-		// Ch 2. Logging Lv 3. Logging Requests
-		// we can wrap the entire mux with the middleware, so that all requests are logged:
-		// Ch 2. Logging Lv 4. Global Logger vs. Dependency Injection
-		// Use the access logger for server/request logs
+		Addr:    fmt.Sprintf(":%d", port),
 		Handler: middleware.RequestLogger(accessLogger)(mux),
 	}
 
@@ -46,7 +43,20 @@ func NewServer(
 		logger: accessLogger,
 	}
 
-	// mux.HandleFunc("GET /", s.handlerIndex)
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		dat, err := json.Marshal(map[string]string{"status": "ok"})
+		if err != nil {
+			s.logger.Error(fmt.Sprintf("Error marshalling JSON: %s", err))
+			w.WriteHeader(500)
+			return
+		}
+		_, err = w.Write(dat)
+		if err != nil {
+			s.logger.Error(fmt.Sprintf("Error setting message: %s", err))
+		}
+	})
 	// mux.Handle("POST /api/login", s.authMiddleware(http.HandlerFunc(s.handlerLogin)))
 	// mux.Handle("POST /api/shorten", s.authMiddleware(http.HandlerFunc(s.handlerShortenLink)))
 	// mux.Handle("GET /api/stats", s.authMiddleware(http.HandlerFunc(s.handlerStats)))
