@@ -145,3 +145,38 @@ func TestUserService_CreateUser_InvalidInput(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestUserService_GetUsers_Success(t *testing.T) {
+	repo := new(MockUserRepository)
+	userService := service.NewUserService(repo)
+
+	expectedUsers := []model.User{
+		model.User{
+			ID:        1,
+			FirstName: "Admin",
+			Email:     "admin@example.com",
+		},
+		model.User{
+			ID:        2,
+			FirstName: "User",
+			Email:     "user@example.com",
+		},
+	}
+
+	repo.On("List", mock.Anything, mock.MatchedBy(func(filter dto.ListUsersFilter) bool {
+		return true
+	})).
+		Return(expectedUsers, nil).
+		Once()
+
+	actualUsers, err := userService.List(context.Background(), dto.ListUsersFilter{
+		Limit:          10,
+		Offset:         0,
+		IncludeDeleted: false,
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedUsers, actualUsers)
+
+	repo.AssertExpectations(t)
+}
