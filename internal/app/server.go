@@ -18,9 +18,8 @@ import (
 // and update server logging to use that injected logger.
 type server struct {
 	httpServer *http.Server
-	// store      store.Store
-	cancel context.CancelFunc
-	logger *slog.Logger
+	cancel     context.CancelFunc
+	logger     *slog.Logger
 }
 
 func NewServer(
@@ -79,7 +78,7 @@ func (s *server) Start() error {
 	// ln.Addr() returns a net.Addr interface.
 	if addr, ok := ln.Addr().(*net.TCPAddr); ok {
 		httpPort := addr.Port
-		s.logger.Info(fmt.Sprintf("Linko is running on http://localhost:%d\n", httpPort))
+		s.logger.Info(fmt.Sprintf("WeatherAPI is running on http://localhost:%d\n", httpPort))
 	}
 
 	if err := s.httpServer.Serve(ln); !errors.Is(err, http.ErrServerClosed) {

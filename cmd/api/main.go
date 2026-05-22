@@ -38,7 +38,7 @@ func run(
 
 	// Ch 2. Logging Lv 5. Logger Configuration
 	// Assume that in production,
-	// Linko has a LINKO_LOG_FILE environment variable set.
+	// WeatherApp has a LOG_FILE environment variable set.
 	// In local development and staging, it is not set.
 	var initializeLoggerFile = getEnv("LOG_FILE", "")
 
@@ -59,8 +59,6 @@ func run(
 		}
 	}()
 
-	// Ch 2. Logging Lv 4. Global Logger vs. Dependency Injection
-	// Use the access logger for server/request logs
 	s := app.NewServer(httpPort, cancel, logger)
 	var serverErr error
 	go func() {
@@ -78,8 +76,6 @@ func run(
 
 	// Ch 1. Observability Lv 3. What Is Observability?
 	// When the server shuts down (before it exits), print:
-	// Ch 2. Logging Lv 4. Global Logger vs. Dependency Injection
-	// use the standard logger for your Store and shutdown messages
 	logger.Debug("Server is shutting down")
 	if serverErr != nil {
 		logger.Error(fmt.Sprintf("server error: %v\n", serverErr))
