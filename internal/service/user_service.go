@@ -8,12 +8,33 @@ import (
 )
 
 type userRepository interface {
-	Create(ctx context.Context, input dto.CreateUserInput) (model.User, error)
-	List(ctx context.Context, filter dto.ListUsersFilter) ([]model.User, error)
-	GetByEmail(ctx context.Context, email string, includeDeleted bool) (model.User, error)
-	GetByID(ctx context.Context, id int64, includeDeleted bool) (model.User, error)
-	Update(ctx context.Context, id int64, input dto.UpdateUserInput) error
-	Delete(ctx context.Context, id int64) error
+	Create(
+		ctx context.Context,
+		input dto.CreateUserInput,
+	) (model.User, error)
+	List(
+		ctx context.Context,
+		filter dto.ListUsersFilter,
+	) ([]model.User, error)
+	GetByEmail(
+		ctx context.Context,
+		email string,
+		includeDeleted bool,
+	) (model.User, error)
+	GetByID(
+		ctx context.Context,
+		id int64,
+		includeDeleted bool,
+	) (model.User, error)
+	Update(
+		ctx context.Context,
+		id int64,
+		input dto.UpdateUserInput,
+	) error
+	Delete(
+		ctx context.Context,
+		id int64,
+	) error
 }
 
 type UserService struct {
