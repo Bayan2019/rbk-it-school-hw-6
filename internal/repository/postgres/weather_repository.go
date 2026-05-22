@@ -92,13 +92,17 @@ func (r *WeatherRepository) WeatherHistoryOfUser(
 
 	query, queryArgs, err := sqlx.Named(builder.String(), args)
 	if err != nil {
-		return nil, errors.New("sqlx.Named")
+		return []model.WeatherHistory{}, errors.New("sqlx.Named")
 	}
 	query = r.db.Rebind(query)
 
 	var results []model.WeatherHistory
 	if err := r.db.SelectContext(ctx, &results, query, queryArgs...); err != nil {
-		return nil, errors.New("r.db.SelectContext")
+		return []model.WeatherHistory{}, errors.New("r.db.SelectContext")
+	}
+
+	if len(results) == 0 {
+		return []model.WeatherHistory{}, nil
 	}
 
 	return results, nil
