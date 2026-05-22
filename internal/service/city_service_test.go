@@ -170,3 +170,49 @@ func TestCityService_Add2User_InvalidInput(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestCityService_GetByName_Success(t *testing.T) {
+	err := config.MustLoad("../../.env")
+	require.NoError(t, err)
+
+	client := client.NewOsmClient(config.Cfg.Api)
+
+	repo := new(MockCityRepository)
+	userService := service.NewCityService(repo, client)
+
+	expectedCity := model.City{
+		CityID: 1,
+		City:   "Paris",
+	}
+
+	repo.On("GetByName", mock.Anything, "Paris").
+		Return(expectedCity, nil).
+		Once()
+
+	actualCity, err := userService.GetByName(context.Background(), expectedCity.City)
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedCity, actualCity)
+
+	repo.AssertExpectations(t)
+}
+
+func TestUserService_GetByName_NotFound(t *testing.T) {
+	err := config.MustLoad("../../.env")
+	require.NoError(t, err)
+
+	client := client.NewOsmClient(config.Cfg.Api)
+
+	repo := new(MockCityRepository)
+	userService := service.NewCityService(repo, client)
+
+	repo.On("GetByName", mock.Anything, "London").
+		Return(nil, model.ErrCityNotFound).
+		Once()
+
+	_, err = userService.GetByName(context.Background(), "London")
+
+	require.ErrorIs(t, err, model.ErrCityNotFound)
+
+	repo.AssertExpectations(t)
+}

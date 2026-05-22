@@ -7,6 +7,8 @@ import (
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/dto"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type osmProvider interface {
@@ -111,7 +113,7 @@ func (s *CityService) GetByName(
 	ctx context.Context,
 	name string,
 ) (model.City, error) {
-	return s.repo.GetByName(ctx, strings.TrimSpace(strings.ToTitle(name)))
+	return s.repo.GetByName(ctx, strings.TrimSpace(cases.Title(language.Und).String(name)))
 }
 
 func (s *CityService) DeleteFromUser(
