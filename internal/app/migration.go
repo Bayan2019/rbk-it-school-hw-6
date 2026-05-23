@@ -8,6 +8,7 @@ import (
 
 func MigrateUp(db *sqlx.DB, dir string) error {
 
+	goose.SetLogger(goose.NopLogger())
 	if err := goose.Up(db.DB, dir); err != nil {
 		return err
 	}
@@ -15,6 +16,7 @@ func MigrateUp(db *sqlx.DB, dir string) error {
 }
 
 func MigrateDownCompletely(db *sqlx.DB, dir string) error {
+	goose.SetLogger(goose.NopLogger())
 	if err := goose.DownTo(db.DB, dir, 0); err != nil {
 		return err
 	}

@@ -26,7 +26,7 @@ func AuthMiddleware(jwtManager *auth.JWTManager) func(http.Handler) http.Handler
 				jwtManager.Logger.Error(
 					"error -- token doesn't have prefix Bearer",
 				)
-				WriteError(w, http.StatusUnauthorized, "invalid Authorization header format", nil)
+				WriteError(w, http.StatusNotAcceptable, "invalid Authorization header format", nil)
 				return
 			}
 

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"log"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 
 type errorResponse struct {
 	Message string `json:"message"`
-	Error   string `json:"error"`
+	Error   error  `json:"error"`
 }
 
 func WriteJSON(w http.ResponseWriter, status int, v interface{}) {
@@ -38,7 +37,7 @@ func WriteError(w http.ResponseWriter, code int, msg string, err error) {
 	// }
 
 	WriteJSON(w, code, errorResponse{
-		Error:   fmt.Sprintf("%s: %v", msg, err),
+		Error:   err,
 		Message: msg,
 	})
 }

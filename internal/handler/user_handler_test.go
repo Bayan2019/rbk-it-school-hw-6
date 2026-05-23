@@ -14,6 +14,7 @@ import (
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/auth"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/dto"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/handler"
+	middle "github.com/Bayan2019/rbk-it-school-hw-6/internal/middleware"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
 	"github.com/Bayan2019/rbk-it-school-hw-6/pkg/logger"
 	"github.com/go-chi/chi/middleware"
@@ -157,6 +158,9 @@ func TestUserHandler_Register_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/register", bytes.NewReader(body))
+
+	req.Header.Set("Content-Type", "application/json")
+
 	resp := httptest.NewRecorder()
 
 	r.ServeHTTP(resp, req)
@@ -169,4 +173,344 @@ func TestUserHandler_Register_Success(t *testing.T) {
 	assert.Equal(t, expectedResponse, actualResponse)
 
 	userService.AssertExpectations(t)
+}
+
+func TestUserHandler_Register_InvalidJson(t *testing.T) {
+	userService := new(MockUserService)
+
+	logger, close, err := logger.InitializeLogger("")
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+	require.NoError(t, err)
+
+	jwtManager := auth.NewJWTManager([]byte("test-secret"), logger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	userHandler.RegisterCommonRoutes(r)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", bytes.NewBufferString("{invalid-json"))
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+	userService.AssertNotCalled(t, "Create")
+}
+
+func TestUserHandler_Profile_Success(t *testing.T) {
+	userService := new(MockUserService)
+
+	logger, close, err := logger.InitializeLogger("")
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+	require.NoError(t, err)
+
+	jwtManager := auth.NewJWTManager([]byte("test-secret"), logger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	r.Group(func(r chi.Router) {
+		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
+		userHandler.RegisterAuthRoutes(r)
+	})
+
+	user := model.User{
+		ID:        2,
+		FirstName: "User",
+		LastName:  "Role",
+		Email:     "user@example.com",
+		Role:      auth.RolesUser,
+		IsActive:  true,
+	}
+
+	expectedResponse := struct {
+		Message string
+		User    model.User
+	}{
+		Message: "this is protected profile endpoint",
+		User:    user,
+	}
+
+	userService.On("GetByEmail", mock.Anything, user.Email, false).
+		Return(user, nil).
+		Once()
+
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	token, err := jwtManager.Generate(2, "user@example.com", auth.RolesUser)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusOK, resp.Code)
+
+	var actualResponse struct {
+		Message string
+		User    model.User
+	}
+
+	err = json.Unmarshal(resp.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, expectedResponse, actualResponse)
+
+	userService.AssertExpectations(t)
+}
+
+func TestUserHandler_Profile_NoAuthHeader(t *testing.T) {
+	userService := new(MockUserService)
+
+	logger, close, err := logger.InitializeLogger("")
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+	require.NoError(t, err)
+
+	jwtManager := auth.NewJWTManager([]byte("test-secret"), logger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	r.Group(func(r chi.Router) {
+		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
+		userHandler.RegisterAuthRoutes(r)
+	})
+
+	expectedResponse := struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}{
+		Message: "missing Authorization header",
+		Error:   nil,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusUnauthorized, resp.Code)
+
+	var actualResponse struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}
+
+	err = json.Unmarshal(resp.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, expectedResponse, actualResponse)
+
+	userService.AssertNotCalled(t, "GetByEmail")
+}
+
+func TestUserHandler_Profile_WrongAuthHeader(t *testing.T) {
+	userService := new(MockUserService)
+
+	logger, close, err := logger.InitializeLogger("")
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+	require.NoError(t, err)
+
+	jwtManager := auth.NewJWTManager([]byte("test-secret"), logger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	r.Group(func(r chi.Router) {
+		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
+		userHandler.RegisterAuthRoutes(r)
+	})
+
+	expectedResponse := struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}{
+		Message: "invalid Authorization header format",
+		Error:   nil,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	req.Header.Set("Authorization", "Something without Bearer prefix")
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusNotAcceptable, resp.Code)
+
+	var actualResponse struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}
+
+	err = json.Unmarshal(resp.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, expectedResponse, actualResponse)
+
+	userService.AssertNotCalled(t, "GetByEmail")
+}
+
+func TestUserHandler_Profile_NoToken(t *testing.T) {
+	userService := new(MockUserService)
+
+	logger, close, err := logger.InitializeLogger("")
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+	require.NoError(t, err)
+
+	jwtManager := auth.NewJWTManager([]byte("test-secret"), logger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	r.Group(func(r chi.Router) {
+		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
+		userHandler.RegisterAuthRoutes(r)
+	})
+
+	expectedResponse := struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}{
+		Message: "empty token",
+		Error:   nil,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	req.Header.Set("Authorization", "Bearer ")
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusUnauthorized, resp.Code)
+
+	var actualResponse struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}
+
+	err = json.Unmarshal(resp.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, expectedResponse, actualResponse)
+
+	userService.AssertNotCalled(t, "GetByEmail")
+}
+
+func TestUserHandler_Profile_WrongToken(t *testing.T) {
+	userService := new(MockUserService)
+
+	logger, close, err := logger.InitializeLogger("")
+	defer func() {
+		if err := close(); err != nil {
+			// and prints any cleanup error to STDERR.
+			fmt.Fprintf(os.Stderr, "Failed to close logger: %v\n", err)
+		}
+	}()
+	require.NoError(t, err)
+
+	jwtManager := auth.NewJWTManager([]byte("test-secret"), logger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	r.Group(func(r chi.Router) {
+		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
+		userHandler.RegisterAuthRoutes(r)
+	})
+
+	expectedResponse := struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}{
+		Message: "invalid token",
+		Error:   nil,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	req.Header.Set("Authorization", "Bearer prefix")
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusUnauthorized, resp.Code)
+
+	var actualResponse struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}
+
+	err = json.Unmarshal(resp.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, expectedResponse, actualResponse)
+
+	userService.AssertNotCalled(t, "GetByEmail")
 }
