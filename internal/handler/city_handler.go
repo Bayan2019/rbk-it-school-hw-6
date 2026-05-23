@@ -34,6 +34,12 @@ func NewCityHandler(service cityService) *CityHandler {
 	}
 }
 
+func (h *CityHandler) RegisterAuthRoutes(router chi.Router) {
+	router.Post("/cities", h.Add2User)
+	router.Get("/cities", h.ListOfUser)
+	router.Delete("/cities/{city_id}", h.DeleteFromUser)
+}
+
 ////// methods
 ////// methods
 ////// methods

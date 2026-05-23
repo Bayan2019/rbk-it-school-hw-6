@@ -31,7 +31,6 @@ type Server struct {
 }
 
 func NewServer(
-	// store store.Store,
 	port int,
 	cancel context.CancelFunc,
 	accessLogger *slog.Logger,
@@ -82,12 +81,8 @@ func NewServer(
 		// Все операции должны работать через текущего пользователя из JWT.
 		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
 		// Убрать user_id из URL.
-		r.Post("/cities", cityHandler.Add2User)
-		r.Get("/cities", cityHandler.ListOfUser)
-		r.Delete("/cities/{city_id}", cityHandler.DeleteFromUser)
-		r.Get("/weather", weatherHandler.GetWeatherOfUserCities)
-		r.Get("/weather/history", weatherHandler.GetWeatherHistoryOfUser)
-
+		cityHandler.RegisterAuthRoutes(r)
+		weatherHandler.RegisterAuthRoutes(r)
 		userHandler.RegisterAuthRoutes(r)
 
 		// 5. Авторизация (Roles)

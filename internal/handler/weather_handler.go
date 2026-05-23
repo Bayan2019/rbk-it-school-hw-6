@@ -8,6 +8,7 @@ import (
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/dto"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/middleware"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
+	"github.com/go-chi/chi/v5"
 )
 
 type weatherService interface {
@@ -25,6 +26,11 @@ func NewWeatherHandler(city cityService, weather weatherService) *WeatherHandler
 		CityService:    city,
 		WeatherService: weather,
 	}
+}
+
+func (h *WeatherHandler) RegisterAuthRoutes(router chi.Router) {
+	router.Get("/weather", h.GetWeatherOfUserCities)
+	router.Get("/weather/history", h.GetWeatherHistoryOfUser)
 }
 
 ////// methods
