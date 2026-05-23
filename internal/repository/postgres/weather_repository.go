@@ -23,6 +23,46 @@ func NewWeatherRepository(db *sqlx.DB) *WeatherRepository {
 ////// methods
 ////// methods
 
+func (r *WeatherRepository) DoesUserHaveCity(
+	ctx context.Context,
+	userID int64,
+	city string,
+) (bool, error) {
+
+	query := `
+	SELECT EXISTS (
+		SELECT 1 FROM(
+			SELECT uc.user_id, uc.city_id, c.city
+			FROM users_cities AS uc
+			INNER JOIN cities AS c
+			ON uc.city_id = c.city_id
+			WHERE uc.deleted_at IS NULL
+				AND c.city = :city
+				AND uc.user_id = :user_id
+			)
+	);
+	`
+
+	args := map[string]any{
+		"city":    city,
+		"user_id": userID,
+	}
+
+	namedStmt, err := r.db.PrepareNamed(query)
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer namedStmt.Close()
+
+	var exists bool
+	err = namedStmt.QueryRowx(args).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute query: %w", err)
+	}
+
+	return exists, nil
+}
+
 func (r *WeatherRepository) CreateHistory(
 	ctx context.Context,
 	userID int64,
@@ -30,7 +70,7 @@ func (r *WeatherRepository) CreateHistory(
 ) error {
 
 	query := `
-		INSERT INTO weather_history (user_id, city, temperature, description)
+		INSERT INTO weathers (user_id, city, temperature, description)
 		VALUES (:user_id, :city, :temperature, :description)
 	`
 
@@ -65,7 +105,7 @@ func (r *WeatherRepository) WeatherHistoryOfUser(
 	builder := strings.Builder{}
 	builder.WriteString(`
 		SELECT user_id, city, temperature, description, requested_at
-		FROM weather_history
+		FROM weathers
 		WHERE user_id = :user_id
 	`)
 

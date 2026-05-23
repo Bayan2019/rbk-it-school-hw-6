@@ -15,14 +15,17 @@ func setupTestDB(t *testing.T) *sqlx.DB {
 	err := config.MustLoad("../../../.env")
 	require.NoError(t, err)
 
-	db, err := sqlx.Open("pgx", config.Cfg.DatabaseTest.DSN())
+	dns := config.Cfg.DatabaseTest.DSN()
+	dir := config.Cfg.DatabaseTest.MigrationDir
+
+	db, err := sqlx.Open("pgx", dns)
 	require.NoError(t, err)
 
-	err = app.MigrateUp(db)
+	err = app.MigrateUp(db, dir)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = app.MigrateDown(db)
+		err = app.MigrateDown(db, dir)
 		require.NoError(t, err)
 		require.NoError(t, db.Close())
 	})
