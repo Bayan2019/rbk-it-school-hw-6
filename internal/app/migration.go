@@ -14,8 +14,8 @@ func MigrateUp(db *sqlx.DB, dir string) error {
 	return nil
 }
 
-func MigrateDown(db *sqlx.DB, dir string) error {
-	if err := goose.Down(db.DB, dir); err != nil {
+func MigrateDownCompletely(db *sqlx.DB, dir string) error {
+	if err := goose.DownTo(db.DB, dir, 0); err != nil {
 		return err
 	}
 	return nil

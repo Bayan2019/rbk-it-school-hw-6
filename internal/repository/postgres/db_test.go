@@ -25,7 +25,7 @@ func setupTestDB(t *testing.T) *sqlx.DB {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = app.MigrateDown(db, dir)
+		err = app.MigrateDownCompletely(db, dir)
 		require.NoError(t, err)
 		require.NoError(t, db.Close())
 	})

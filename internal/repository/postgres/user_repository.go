@@ -67,7 +67,7 @@ func (r *UserRepository) List(
 ) ([]model.User, error) {
 	builder := strings.Builder{}
 	builder.WriteString(`
-		SELECT id, email, password_hash, first_name, last_name, is_active, created_at, updated_at, deleted_at
+		SELECT id, email, first_name, last_name, role, is_active, created_at, updated_at, deleted_at
 		FROM users
 		WHERE 1=1
 	`)
