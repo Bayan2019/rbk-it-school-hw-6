@@ -10,6 +10,7 @@ import (
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/dto"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/middleware"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
+	"github.com/go-chi/chi/v5"
 )
 
 type userService interface {
@@ -55,9 +56,45 @@ func NewUserHandler(service userService, jwtManager *auth.JWTManager) *UserHandl
 	}
 }
 
+func (h *UserHandler) RegisterCommonRoutes(router *chi.Mux) {
+	router.Get("/health", h.Health)
+	router.Post("/auth/register", h.Register)
+	router.Post("/auth/login", h.Login)
+}
+
+func (h *UserHandler) RegisterAuthRoutes(router chi.Router) {
+	// 8. Новый endpoint
+	router.Get("/users/me", h.Profile)
+	// 4. Защита маршрутов
+	// Убрать user_id из URL.
+	// Все операции должны работать через текущего пользователя из JWT.
+	router.Put("/users/me", h.Update)
+}
+
+func (h *UserHandler) RegisterAdminRoutes(router chi.Router) {
+	router.Get("/users", h.List)
+	router.Get("/users/{id}", h.GetByID)
+	router.Delete("/users/{id}", h.Delete)
+}
+
 ////// methods
 ////// methods
 ////// methods
+
+func (h *UserHandler) Health(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	dat, err := json.Marshal(map[string]string{"status": "ok"})
+	if err != nil {
+		// s.logger.Error(fmt.Sprintf("Error marshalling JSON: %s", err))
+		w.WriteHeader(500)
+		return
+	}
+	_, err = w.Write(dat)
+	if err != nil {
+		// s.logger.Error(fmt.Sprintf("Error setting message: %s", err))
+	}
+}
 
 // 1. Аутентификация
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {

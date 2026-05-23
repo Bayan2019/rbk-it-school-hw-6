@@ -76,8 +76,7 @@ func NewServer(
 	r.Use(middleware.Timeout(10 * time.Second))
 
 	// 1. Аутентификация
-	r.Post("/auth/register", userHandler.Register)
-	r.Post("/auth/login", userHandler.Login)
+	userHandler.RegisterCommonRoutes(r)
 	// 4. Защита маршрутов
 	r.Group(func(r chi.Router) {
 		// Все операции должны работать через текущего пользователя из JWT.
@@ -89,26 +88,17 @@ func NewServer(
 		r.Get("/weather", weatherHandler.GetWeatherOfUserCities)
 		r.Get("/weather/history", weatherHandler.GetWeatherHistoryOfUser)
 
-		// 8. Новый endpoint
-		r.Get("/users/me", userHandler.Profile)
-		// 4. Защита маршрутов
-		// Убрать user_id из URL.
-		// Все операции должны работать через текущего пользователя из JWT.
-		r.Put("/users/me", userHandler.Update)
+		userHandler.RegisterAuthRoutes(r)
 
 		// 5. Авторизация (Roles)
 		r.Group(func(r chi.Router) {
 			// Использовать middleware RequireRole("admin")
 			r.Use(middle.RequireRole(auth.RolesAdmin))
 			// Только admin может:
-			r.Get("/users", userHandler.List)
-			r.Get("/users/{id}", userHandler.GetByID)
-			r.Delete("/users/{id}", userHandler.Delete)
+			userHandler.RegisterAdminRoutes(r)
 			r.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
 		})
 	})
-	// mux.HandleFunc("GET /{shortCode}", s.handlerRedirect)
-	// r.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
 
 	return s
 }
