@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/auth"
@@ -105,10 +104,11 @@ func NewServer(
 			r.Get("/users", userHandler.List)
 			r.Get("/users/{id}", userHandler.GetByID)
 			r.Delete("/users/{id}", userHandler.Delete)
+			r.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
 		})
 	})
 	// mux.HandleFunc("GET /{shortCode}", s.handlerRedirect)
-	r.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
+	// r.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
 
 	return s
 }
@@ -140,7 +140,8 @@ func (s *Server) Shutdown(ctx context.Context) error {
 }
 
 func (s *Server) HandlerShutdown(w http.ResponseWriter, r *http.Request) {
-	if os.Getenv("ENV") == "production" {
+	// s.logger.Info("shutting down", "ENV", config.Cfg.App.Environment)
+	if config.Cfg.App.Environment == "production" {
 		http.NotFound(w, r)
 		return
 	}
