@@ -3,7 +3,7 @@ INSERT INTO users (email, password_hash, first_name, last_name, is_active, role)
 VALUES
     ('admin@example.com', '$2a$12$19E8eNXYZEZGelkKqNBIPuGIqptOh4lZsjQHi.Y2V2vZV4V8dFFJe',
         'Admin', 'Role', TRUE, 'admin'),
-    ('user@example.com', '$2a$12$wb9gOgmR4OwdVfl2DmfsY.AIK53qR33nYdkPuMAWT8HsIXm7dEpBS', 
+    ('user@example.com', '$2a$12$uLxzsDoFUV/qOceg1SGQ7Ok7QH2A4EybW35rqjhK7AR663kyEZeIS', 
         'User', 'Role', TRUE, 'user'),
     ('ivan@example.com', '$2a$12$UJoiT8R0p2bLv3BHbDYhquWuRb33bmEFMJEz5p3bv3l0Ygvu9M2b6', 
         'Ivan', 'Ivanov', TRUE, 'user'),
