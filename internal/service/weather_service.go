@@ -17,7 +17,7 @@ type weatherRepository interface {
 		userID int64,
 		city string,
 	) (bool, error)
-	CreateHistory(
+	Create(
 		ctx context.Context,
 		userID int64,
 		cityWeather dto.CityWeatherInput,
@@ -45,7 +45,7 @@ func NewWeatherService(repo weatherRepository, provider weatherProvider) *Weathe
 ////// methods
 ////// methods
 
-func (s *WeatherService) CreateHistory(ctx context.Context,
+func (s *WeatherService) Create(ctx context.Context,
 	userID int64,
 	city model.City,
 ) (model.Weather, error) {
@@ -66,7 +66,7 @@ func (s *WeatherService) CreateHistory(ctx context.Context,
 		return weather, err
 	}
 
-	err = s.repo.CreateHistory(ctx, userID, dto.CityWeatherInput{
+	err = s.repo.Create(ctx, userID, dto.CityWeatherInput{
 		City:        city.City,
 		Temperature: weather.Temperature,
 		Description: weather.Description,

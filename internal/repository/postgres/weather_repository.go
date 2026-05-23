@@ -63,7 +63,7 @@ func (r *WeatherRepository) DoesUserHaveCity(
 	return exists, nil
 }
 
-func (r *WeatherRepository) CreateHistory(
+func (r *WeatherRepository) Create(
 	ctx context.Context,
 	userID int64,
 	cityWeather dto.CityWeatherInput,

@@ -11,7 +11,7 @@ import (
 )
 
 type weatherService interface {
-	CreateHistory(ctx context.Context, userID int64, city model.City) (model.Weather, error)
+	Create(ctx context.Context, userID int64, city model.City) (model.Weather, error)
 	WeatherHistoryOfUser(ctx context.Context, userID int64, filter dto.WeatherHistoryFilter) ([]model.WeatherHistory, error)
 }
 
@@ -46,7 +46,7 @@ func (h *WeatherHandler) GetWeatherOfUserCities(w http.ResponseWriter, r *http.R
 	results := []model.WeatherHistory{}
 
 	for _, city := range cities {
-		weather, err := h.WeatherService.CreateHistory(r.Context(), user.ID, city)
+		weather, err := h.WeatherService.Create(r.Context(), user.ID, city)
 		if err != nil {
 			h.handleError(w, err)
 			return

@@ -50,7 +50,7 @@ func TestWeatherRepository_CreateHistoryAndHistoryOfUser(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewWeatherRepository(db)
 
-	err := repo.CreateHistory(context.Background(),
+	err := repo.Create(context.Background(),
 		2,
 		dto.CityWeatherInput{
 			City:        "Paris",
