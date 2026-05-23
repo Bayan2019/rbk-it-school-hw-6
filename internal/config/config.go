@@ -30,12 +30,13 @@ type AppConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     string
-	Name     string
-	User     string
-	Password string
-	SSLMode  string
+	Host         string
+	Port         string
+	Name         string
+	User         string
+	Password     string
+	SSLMode      string
+	MigrationDir string
 }
 
 type ApiConfig struct {
@@ -73,20 +74,22 @@ func MustLoad(path string) error {
 			IdleTimeout:  mustDuration("APP_IDLE_TIMEOUT", "60s"),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
-			Name:     getEnv("DB_NAME", "users_db"),
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "postgres"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			Host:         getEnv("DB_HOST", "localhost"),
+			Port:         getEnv("DB_PORT", "5432"),
+			Name:         getEnv("DB_NAME", "users_db"),
+			User:         getEnv("DB_USER", "postgres"),
+			Password:     getEnv("DB_PASSWORD", "postgres"),
+			SSLMode:      getEnv("DB_SSLMODE", "disable"),
+			MigrationDir: getEnv("MIGRATION_DIR", "./migrations/postgres"),
 		},
 		DatabaseTest: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
-			Name:     getEnv("DB_NAME_TEST", "users_db_test"),
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "postgres"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			Host:         getEnv("DB_HOST", "localhost"),
+			Port:         getEnv("DB_PORT", "5432"),
+			Name:         getEnv("DB_NAME_TEST", "users_db_test"),
+			User:         getEnv("DB_USER", "postgres"),
+			Password:     getEnv("DB_PASSWORD", "postgres"),
+			SSLMode:      getEnv("DB_SSLMODE", "disable"),
+			MigrationDir: getEnv("MIGRATION_DIR", "./migrations/postgres"),
 		},
 		Api: ApiConfig{
 			Limiter:   rate.NewLimiter(rate.Every(time.Second), 5),
