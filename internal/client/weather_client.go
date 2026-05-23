@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/model"
 )
@@ -15,10 +16,12 @@ type WeatherClient struct {
 	baseURL    string
 }
 
-func NewWeatherClient(httpClient *http.Client) *WeatherClient {
+func NewWeatherClient() *WeatherClient {
 	return &WeatherClient{
-		httpClient: httpClient,
-		baseURL:    "https://api.open-meteo.com/v1/forecast",
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+		baseURL: "https://api.open-meteo.com/v1/forecast",
 	}
 }
 
