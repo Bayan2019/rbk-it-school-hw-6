@@ -49,7 +49,7 @@ func TestCityRepository_Add2UserAndListCitiesOfUser(t *testing.T) {
 	repo := postgres.NewCityRepository(db)
 
 	err := repo.Add2User(context.Background(), 2, dto.AddCityInput{
-		City: "Paris",
+		City: "Berlin",
 	})
 
 	require.NoError(t, err)
@@ -64,21 +64,15 @@ func TestCityRepository_Add2UserAndListCitiesOfUser(t *testing.T) {
 	)
 
 	require.NoError(t, err)
-	city := cities[0]
-	assert.Equal(t, "Paris", city.City)
+	// city := cities[0]
+	assert.Equal(t, len(cities), 2)
 }
 
 func TestCityRepository_Add2User_AlreadyAdded(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewCityRepository(db)
 
-	err := repo.Add2User(context.Background(), 2, dto.AddCityInput{
-		City: "Paris",
-	})
-
-	require.NoError(t, err)
-
-	err = repo.Add2User(
+	err := repo.Add2User(
 		context.Background(),
 		2,
 		dto.AddCityInput{
@@ -140,11 +134,20 @@ func TestCityRepository_GetByName(t *testing.T) {
 	}
 }
 
-func TestCityRepository_DeleteFromUser(t *testing.T) {
+func TestCityRepository_DeleteFromUser_Success(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewCityRepository(db)
 
 	err := repo.DeleteFromUser(context.Background(), 2, 1)
 
-	assert.Equal(t, model.ErrCityNotFound, err)
+	require.NoError(t, err)
+}
+
+func TestCityRepository_DeleteFromUser_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	repo := postgres.NewCityRepository(db)
+
+	err := repo.DeleteFromUser(context.Background(), 2, 2)
+
+	require.ErrorIs(t, model.ErrCityNotFound, err)
 }

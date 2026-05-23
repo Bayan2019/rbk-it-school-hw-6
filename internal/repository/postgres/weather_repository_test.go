@@ -14,13 +14,6 @@ import (
 func TestWeatherRepository_DoesUserHaveCity_Yes(t *testing.T) {
 	db := setupTestDB(t)
 	repo := postgres.NewWeatherRepository(db)
-	cityRepo := postgres.NewCityRepository(db)
-
-	err := cityRepo.Add2User(context.Background(), 2, dto.AddCityInput{
-		City: "Paris",
-	})
-
-	require.NoError(t, err)
 
 	exists, err := repo.DoesUserHaveCity(
 		context.Background(),
@@ -39,7 +32,7 @@ func TestWeatherRepository_DoesUserHaveCity_No(t *testing.T) {
 	exists, err := repo.DoesUserHaveCity(
 		context.Background(),
 		2,
-		"Paris",
+		"Berlin",
 	)
 
 	require.NoError(t, err)
