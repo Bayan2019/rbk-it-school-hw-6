@@ -20,13 +20,6 @@ func NewDB(cfg config.DatabaseConfig) (*sqlx.DB, error) {
 	db.SetConnMaxLifetime(30 * time.Minute)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 
-	// var dbName string
-	// err = db.Get(&dbName, "SELECT current_database()")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Printf("Database: %s\n", dbName)
-
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}

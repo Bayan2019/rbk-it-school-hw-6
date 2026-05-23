@@ -2,15 +2,24 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
+	"time"
 
-	"github.com/Bayan2019/rbk-it-school-hw-6/internal/middleware"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/auth"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/client"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/config"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/handler"
+	middle "github.com/Bayan2019/rbk-it-school-hw-6/internal/middleware"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/repository/postgres"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/service"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
 )
 
 // Ch 2. Logging Lv 4. Global Logger vs. Dependency Injection
@@ -27,12 +36,31 @@ func NewServer(
 	port int,
 	cancel context.CancelFunc,
 	accessLogger *slog.Logger,
+	db *sqlx.DB,
 ) *Server {
-	mux := http.NewServeMux()
+
+	userRepo := postgres.NewUserRepository(db)
+	cityRepo := postgres.NewCityRepository(db)
+	weatherRepo := postgres.NewWeatherRepository(db)
+
+	osmClient := client.NewOsmClient(config.Cfg.Api)
+	weatherClient := client.NewWeatherClient()
+
+	userService := service.NewUserService(userRepo)
+	cityService := service.NewCityService(cityRepo, osmClient)
+	weatherService := service.NewWeatherService(weatherRepo, weatherClient)
+
+	jwtManager := auth.NewJWTManager([]byte(config.Cfg.App.JwtSecret), accessLogger)
+
+	userHandler := handler.NewUserHandler(userService, jwtManager)
+	cityHandler := handler.NewCityHandler(cityService)
+	weatherHandler := handler.NewWeatherHandler(cityService, weatherService)
+
+	r := chi.NewRouter()
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
-		Handler: middleware.RequestLogger(accessLogger)(mux),
+		Handler: middle.RequestLogger(accessLogger)(r),
 	}
 
 	s := &Server{
@@ -42,26 +70,45 @@ func NewServer(
 		logger: accessLogger,
 	}
 
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		dat, err := json.Marshal(map[string]string{"status": "ok"})
-		if err != nil {
-			s.logger.Error(fmt.Sprintf("Error marshalling JSON: %s", err))
-			w.WriteHeader(500)
-			return
-		}
-		_, err = w.Write(dat)
-		if err != nil {
-			s.logger.Error(fmt.Sprintf("Error setting message: %s", err))
-		}
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(10 * time.Second))
+
+	// 1. Аутентификация
+	r.Post("/auth/register", userHandler.Register)
+	r.Post("/auth/login", userHandler.Login)
+	// 4. Защита маршрутов
+	r.Group(func(r chi.Router) {
+		// Все операции должны работать через текущего пользователя из JWT.
+		r.Use(middle.AuthMiddleware(userHandler.JwtManager))
+		// Убрать user_id из URL.
+		r.Post("/cities", cityHandler.Add2User)
+		r.Get("/cities", cityHandler.ListOfUser)
+		r.Delete("/cities/{city_id}", cityHandler.DeleteFromUser)
+		r.Get("/weather", weatherHandler.GetWeatherOfUserCities)
+		r.Get("/weather/history", weatherHandler.GetWeatherHistoryOfUser)
+
+		// 8. Новый endpoint
+		r.Get("/users/me", userHandler.Profile)
+		// 4. Защита маршрутов
+		// Убрать user_id из URL.
+		// Все операции должны работать через текущего пользователя из JWT.
+		r.Put("/users/me", userHandler.Update)
+
+		// 5. Авторизация (Roles)
+		r.Group(func(r chi.Router) {
+			// Использовать middleware RequireRole("admin")
+			r.Use(middle.RequireRole(auth.RolesAdmin))
+			// Только admin может:
+			r.Get("/users", userHandler.List)
+			r.Get("/users/{id}", userHandler.GetByID)
+			r.Delete("/users/{id}", userHandler.Delete)
+		})
 	})
-	// mux.Handle("POST /api/login", s.authMiddleware(http.HandlerFunc(s.handlerLogin)))
-	// mux.Handle("POST /api/shorten", s.authMiddleware(http.HandlerFunc(s.handlerShortenLink)))
-	// mux.Handle("GET /api/stats", s.authMiddleware(http.HandlerFunc(s.handlerStats)))
-	// mux.Handle("GET /api/urls", s.authMiddleware(http.HandlerFunc(s.handlerListURLs)))
 	// mux.HandleFunc("GET /{shortCode}", s.handlerRedirect)
-	mux.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
+	r.HandleFunc("POST /admin/shutdown", s.HandlerShutdown)
 
 	return s
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,7 +11,9 @@ import (
 
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/app"
 	"github.com/Bayan2019/rbk-it-school-hw-6/internal/config"
+	"github.com/Bayan2019/rbk-it-school-hw-6/internal/repository/postgres"
 	"github.com/Bayan2019/rbk-it-school-hw-6/pkg/logger"
+	"github.com/jmoiron/sqlx"
 )
 
 func main() {
@@ -18,9 +21,14 @@ func main() {
 	if err != nil {
 		fmt.Printf("warning: assuming default configuration: .env unreadable: %v\n", err)
 	}
+	db, err := postgres.NewDB(config.Cfg.Database)
+	if err != nil {
+		log.Fatalf("connect database: %v", err)
+	}
+	defer db.Close()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
-	status := run(ctx, cancel, config.Cfg.App.Port)
+	status := run(ctx, cancel, config.Cfg.App.Port, db)
 	cancel()
 	os.Exit(status)
 }
@@ -29,6 +37,7 @@ func run(
 	ctx context.Context,
 	cancel context.CancelFunc,
 	httpPort int,
+	db *sqlx.DB,
 	// dataDir string,
 ) int {
 
@@ -49,7 +58,7 @@ func run(
 		}
 	}()
 
-	s := app.NewServer(httpPort, cancel, logger)
+	s := app.NewServer(httpPort, cancel, logger, db)
 	var serverErr error
 	go func() {
 		serverErr = s.Start()
