@@ -45,7 +45,8 @@ func NewWeatherService(repo weatherRepository, provider weatherProvider) *Weathe
 ////// methods
 ////// methods
 
-func (s *WeatherService) Create(ctx context.Context,
+func (s *WeatherService) Create(
+	ctx context.Context,
 	userID int64,
 	city model.City,
 ) (model.Weather, error) {
@@ -72,7 +73,6 @@ func (s *WeatherService) Create(ctx context.Context,
 		Description: weather.Description,
 	})
 	if err != nil {
-
 		return weather, err
 	}
 
