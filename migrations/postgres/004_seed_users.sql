@@ -10,7 +10,7 @@ VALUES
     ('dana@example.com', '$2a$12$4BjlkDs6ZX.6n3eeNAp/y.b9ItwSLzVynAtHIqSU2a.svD7Szs9xa',
         'Dana', 'Sadykova', TRUE, 'user'),
     ('ayan@example.com', '$2a$12$LqHfxRBEcd7FU869.dVsn.2dmtZo/AukWuKnnopKrqT/jULxcDF22', 
-        'Ayan', 'Kaliyev', FALSE, 'user')
+        'Ayan', 'Mansurov', FALSE, 'user')
 ON CONFLICT DO NOTHING;
 
 -- +goose Down
